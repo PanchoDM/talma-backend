@@ -1,0 +1,38 @@
+-- TalmaFM2026 - Esquema PostgreSQL v2.0 (Supabase)
+
+CREATE TABLE IF NOT EXISTS usuarios (
+  id               VARCHAR(36)  NOT NULL PRIMARY KEY,
+  nombre_usuario   VARCHAR(50)  NOT NULL UNIQUE,
+  password_hash    VARCHAR(255) NOT NULL,
+  puntos_totales   INTEGER      NOT NULL DEFAULT 0,
+  aciertos_exactos INTEGER      NOT NULL DEFAULT 0,
+  rol              VARCHAR(10)  NOT NULL DEFAULT 'user' CHECK (rol IN ('user','admin')),
+  created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS partidos (
+  id                 SERIAL       PRIMARY KEY,
+  equipo_local       VARCHAR(60)  NOT NULL,
+  equipo_visitante   VARCHAR(60)  NOT NULL,
+  fecha_partido      TIMESTAMP    NOT NULL,
+  goles_local_mt     SMALLINT     NULL DEFAULT NULL,
+  goles_visitante_mt SMALLINT     NULL DEFAULT NULL,
+  estado             VARCHAR(20)  NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','medio_tiempo','finalizado')),
+  apuestas_abiertas  BOOLEAN      NOT NULL DEFAULT TRUE,
+  visible_usuarios   BOOLEAN      NOT NULL DEFAULT TRUE,
+  updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS predicciones (
+  id                           SERIAL      PRIMARY KEY,
+  usuario_id                   VARCHAR(36) NOT NULL,
+  partido_id                   INTEGER     NOT NULL,
+  goles_local_esperados_mt     SMALLINT    NOT NULL,
+  goles_visitante_esperados_mt SMALLINT    NOT NULL,
+  tendencia_apostada           VARCHAR(10) NOT NULL CHECK (tendencia_apostada IN ('local','empate','visitante')),
+  puntos_obtenidos             INTEGER     NULL DEFAULT NULL,
+  created_at                   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (usuario_id, partido_id),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (partido_id) REFERENCES partidos(id) ON DELETE CASCADE
+);
