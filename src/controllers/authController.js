@@ -1,6 +1,5 @@
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 const pool     = require('../config/database');
 
 async function register(req, res) {
@@ -10,14 +9,16 @@ async function register(req, res) {
 
   try {
     const hash = await bcrypt.hash(password, 12);
+    // Para PostgreSQL usamos $1, $2. Y quitamos el ID manual porque Supabase lo pone solo (int4)
     await pool.query(
-      'INSERT INTO usuarios (id, nombre_usuario, password_hash) VALUES (?, ?, ?)',
-      [uuidv4(), nombre_usuario.trim(), hash]
+      'INSERT INTO usuarios (nombre_usuario, password_hash) VALUES ($1, $2)',
+      [nombre_usuario.trim(), hash]
     );
     res.status(201).json({ message: 'Usuario creado exitosamente' });
   } catch (err) {
     if (err.code === '23505')
       return res.status(409).json({ message: 'El nombre de usuario ya existe' });
+    console.error("Error en registro:", err);
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
@@ -28,10 +29,14 @@ async function login(req, res) {
     return res.status(400).json({ message: 'Credenciales requeridas' });
 
   try {
-    const [[user]] = await pool.query(
-      'SELECT id, nombre_usuario, password_hash, puntos_totales, aciertos_exactos, rol FROM usuarios WHERE nombre_usuario = ?',
+    // Consulta adaptada para PostgreSQL usando $1 y leyendo result.rows
+    const result = await pool.query(
+      'SELECT id, nombre_usuario, password_hash, puntos_totales, aciertos_exactos, rol FROM usuarios WHERE nombre_usuario = $1',
       [nombre_usuario]
     );
+    
+    const user = result.rows[0]; // Así lee los datos PostgreSQL
+
     if (!user || !(await bcrypt.compare(password, user.password_hash)))
       return res.status(401).json({ message: 'Credenciales incorrectas' });
 
@@ -51,7 +56,8 @@ async function login(req, res) {
         rol:             user.rol,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Error en login:", error); // Esto imprimirá el error real en Render si vuelve a fallar
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
