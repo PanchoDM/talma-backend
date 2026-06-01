@@ -1,17 +1,15 @@
 const { Pool } = require('pg');
 
+// Configuramos la conexión asegurando que el SSL esté activo (requerido por Supabase)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-// Adapter: convierte placeholders ? de estilo MySQL a $1, $2, ... de PostgreSQL
-// y devuelve [rows] para mantener la API compatible con todo el código existente.
-async function query(sql, params = []) {
-  let i = 0;
-  const pgSql = sql.replace(/\?/g, () => `$${++i}`);
-  const result = await pool.query(pgSql, params);
-  return [result.rows];
-}
+pool.on('error', (err) => {
+  console.error('Error inesperado en la base de datos:', err);
+});
 
-module.exports = { query };
+module.exports = pool;
