@@ -2,7 +2,7 @@ const pool = require('../config/database');
 
 async function getLeaderboard(req, res) {
   try {
-    const [rows] = await pool.query(
+    const { rows } = await pool.query(
       `SELECT nombre_usuario, puntos_totales, aciertos_exactos, rol,
               RANK() OVER (ORDER BY puntos_totales DESC, aciertos_exactos DESC) AS posicion
        FROM usuarios

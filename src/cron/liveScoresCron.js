@@ -47,7 +47,7 @@ async function procesarMarcadores() {
     }
 
     // Obtener partidos no finalizados de la BD
-    const [partidos] = await pool.query(
+    const { rows: partidos } = await pool.query(
       "SELECT id, equipo_local, equipo_visitante FROM partidos WHERE estado != 'finalizado'"
     );
 
@@ -61,8 +61,8 @@ async function procesarMarcadores() {
       if (score.estado === 'HT' && score.golesLocal !== null) {
         await pool.query(
           `UPDATE partidos
-           SET goles_local_mt = ?, goles_visitante_mt = ?, estado = 'medio_tiempo', apuestas_abiertas = FALSE
-           WHERE id = ?`,
+           SET goles_local_mt = $1, goles_visitante_mt = $2, estado = 'medio_tiempo', apuestas_abiertas = FALSE
+           WHERE id = $3`,
           [score.golesLocal, score.golesVisitante, partido.id]
         );
         console.log(`[Cron] ⚽ Medio tiempo actualizado: partido ${partido.id}`);
@@ -70,7 +70,7 @@ async function procesarMarcadores() {
 
       if (score.estado === 'FT') {
         await pool.query(
-          "UPDATE partidos SET estado = 'finalizado', apuestas_abiertas = FALSE WHERE id = ?",
+          "UPDATE partidos SET estado = 'finalizado', apuestas_abiertas = FALSE WHERE id = $1",
           [partido.id]
         );
         await calcularYRepartirPuntos(partido.id);

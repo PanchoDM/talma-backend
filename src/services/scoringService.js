@@ -8,10 +8,11 @@ const pool = require('../config/database');
  *   - Sin acierto → 0 puntos
  */
 async function calcularYRepartirPuntos(partidoId) {
-  const [[partido]] = await pool.query(
-    'SELECT goles_local_mt, goles_visitante_mt FROM partidos WHERE id = ?',
+  const { rows } = await pool.query(
+    'SELECT goles_local_mt, goles_visitante_mt FROM partidos WHERE id = $1',
     [partidoId]
   );
+  const partido = rows[0];
   if (!partido) throw new Error(`Partido ${partidoId} no encontrado`);
 
   const { goles_local_mt: gl, goles_visitante_mt: gv } = partido;
@@ -19,8 +20,8 @@ async function calcularYRepartirPuntos(partidoId) {
 
   const tendenciaReal = gl > gv ? 'local' : gl < gv ? 'visitante' : 'empate';
 
-  const [predicciones] = await pool.query(
-    'SELECT id, usuario_id, goles_local_esperados_mt, goles_visitante_esperados_mt, tendencia_apostada FROM predicciones WHERE partido_id = ? AND puntos_obtenidos IS NULL',
+  const { rows: predicciones } = await pool.query(
+    'SELECT id, usuario_id, goles_local_esperados_mt, goles_visitante_esperados_mt, tendencia_apostada FROM predicciones WHERE partido_id = $1 AND puntos_obtenidos IS NULL',
     [partidoId]
   );
 
@@ -33,7 +34,7 @@ async function calcularYRepartirPuntos(partidoId) {
     else if (esTendencia) puntos = 3;
 
     await pool.query(
-      'UPDATE predicciones SET puntos_obtenidos = ? WHERE id = ?',
+      'UPDATE predicciones SET puntos_obtenidos = $1 WHERE id = $2',
       [puntos, pred.id]
     );
 
@@ -41,7 +42,7 @@ async function calcularYRepartirPuntos(partidoId) {
     if (puntos > 0) {
       const aciertosExactos = esExacto ? 1 : 0;
       await pool.query(
-        'UPDATE usuarios SET puntos_totales = puntos_totales + ?, aciertos_exactos = aciertos_exactos + ? WHERE id = ?',
+        'UPDATE usuarios SET puntos_totales = puntos_totales + $1, aciertos_exactos = aciertos_exactos + $2 WHERE id = $3',
         [puntos, aciertosExactos, pred.usuario_id]
       );
     }

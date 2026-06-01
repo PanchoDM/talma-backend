@@ -8,10 +8,10 @@ const pool = require('../config/database');
  *   { streak: 'neutral', message: null }                         → sin racha
  */
 async function getStreak(usuarioId) {
-  const [rows] = await pool.query(
+  const { rows } = await pool.query(
     `SELECT puntos_obtenidos
      FROM predicciones
-     WHERE usuario_id = ? AND puntos_obtenidos IS NOT NULL
+     WHERE usuario_id = $1 AND puntos_obtenidos IS NOT NULL
      ORDER BY id DESC
      LIMIT 3`,
     [usuarioId]
