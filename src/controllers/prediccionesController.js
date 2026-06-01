@@ -9,11 +9,14 @@ async function crear(req, res) {
     return res.status(400).json({ message: 'partido_id, goles_local y goles_visitante son requeridos' });
 
   try {
-    // Verificar que las apuestas estén abiertas para ese partido
-    const [[partido]] = await pool.query(
-      'SELECT apuestas_abiertas, estado FROM partidos WHERE id = ?', [partido_id]
+    // PostgreSQL: Extraemos { rows } y usamos $1
+    const { rows: partidos } = await pool.query(
+      'SELECT apuestas_abiertas, estado FROM partidos WHERE id = $1', [partido_id]
     );
-    if (!partido) return res.status(404).json({ message: 'Partido no encontrado' });
+    
+    if (partidos.length === 0) return res.status(404).json({ message: 'Partido no encontrado' });
+    
+    const partido = partidos[0];
     if (!partido.apuestas_abiertas || partido.estado === 'finalizado')
       return res.status(403).json({ message: 'Las apuestas para este partido están cerradas' });
 
@@ -21,14 +24,16 @@ async function crear(req, res) {
     const gv = Number(goles_visitante_esperados_mt);
     const tendencia = gl > gv ? 'local' : gl < gv ? 'visitante' : 'empate';
 
+    // PostgreSQL: usamos $1, $2, $3, $4, $5
     await pool.query(
       `INSERT INTO predicciones
          (usuario_id, partido_id, goles_local_esperados_mt, goles_visitante_esperados_mt, tendencia_apostada)
-       VALUES (?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5)`,
       [usuarioId, partido_id, gl, gv, tendencia]
     );
     res.status(201).json({ message: 'Predicción guardada', tendencia });
   } catch (err) {
+    console.error("Error al guardar predicción:", err);
     if (err.code === '23505')
       return res.status(409).json({ message: 'Ya tienes una predicción para este partido' });
     res.status(500).json({ message: 'Error interno' });
@@ -37,18 +42,20 @@ async function crear(req, res) {
 
 async function getMias(req, res) {
   try {
-    const [rows] = await pool.query(
+    // PostgreSQL: Extraemos { rows } y usamos $1
+    const { rows } = await pool.query(
       `SELECT pr.id, pr.partido_id, p.equipo_local, p.equipo_visitante, p.fecha_partido,
               pr.goles_local_esperados_mt, pr.goles_visitante_esperados_mt,
               pr.tendencia_apostada, pr.puntos_obtenidos
        FROM predicciones pr
        JOIN partidos p ON p.id = pr.partido_id
-       WHERE pr.usuario_id = ?
+       WHERE pr.usuario_id = $1
        ORDER BY p.fecha_partido ASC`,
       [req.user.id]
     );
     res.json(rows);
-  } catch {
+  } catch (err) {
+    console.error("Error al obtener mis predicciones:", err);
     res.status(500).json({ message: 'Error interno' });
   }
 }
@@ -57,7 +64,8 @@ async function getStreakEndpoint(req, res) {
   try {
     const result = await getStreak(req.user.id);
     res.json(result);
-  } catch {
+  } catch (err) {
+    console.error("Error en racha:", err);
     res.status(500).json({ message: 'Error al obtener racha' });
   }
 }
