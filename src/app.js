@@ -27,4 +27,20 @@ require('./cron/liveScoresCron');
 app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'TalmaFM2026 v2.0' }));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 TalmaFM2026 Backend corriendo en http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 TalmaFM2026 Backend corriendo en http://localhost:${PORT}`);
+
+  // Keep-alive: evita que Render (free tier) hiberne el servidor por inactividad.
+  // Requiere la variable de entorno APP_URL con la URL pública del servicio en Render.
+  const APP_URL = process.env.APP_URL;
+  if (APP_URL) {
+    const { get } = APP_URL.startsWith('https') ? require('https') : require('http');
+    setInterval(() => {
+      get(`${APP_URL}/api/health`, res => {
+        console.log(`[keep-alive] ping → ${res.statusCode}`);
+        res.resume();
+      }).on('error', err => console.error(`[keep-alive] error: ${err.message}`));
+    }, 10 * 60 * 1000); // cada 10 minutos
+    console.log(`[keep-alive] activo → ${APP_URL}/api/health`);
+  }
+});

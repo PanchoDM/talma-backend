@@ -7,6 +7,9 @@ async function register(req, res) {
   if (!nombre_usuario || !password)
     return res.status(400).json({ message: 'nombre_usuario y password son requeridos' });
 
+  if (!nombre_usuario.trim().toLowerCase().endsWith('@talma.com'))
+    return res.status(403).json({ message: 'ingrese la credencial correcta' });
+
   try {
     const hash = await bcrypt.hash(password, 12);
     // Para PostgreSQL usamos $1, $2. Y quitamos el ID manual porque Supabase lo pone solo (int4)
@@ -27,6 +30,9 @@ async function login(req, res) {
   const { nombre_usuario, password } = req.body;
   if (!nombre_usuario || !password)
     return res.status(400).json({ message: 'Credenciales requeridas' });
+
+  if (!nombre_usuario.trim().toLowerCase().endsWith('@talma.com'))
+    return res.status(403).json({ message: 'ingrese la credencial correcta' });
 
   try {
     // Consulta adaptada para PostgreSQL usando $1 y leyendo result.rows
