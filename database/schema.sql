@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS partidos (
   equipo_local       VARCHAR(60)  NOT NULL,
   equipo_visitante   VARCHAR(60)  NOT NULL,
   fecha_partido      TIMESTAMP    NOT NULL,
+  grupo              VARCHAR(2)   NULL,
+  jornada            SMALLINT     NULL,
   goles_local_mt     SMALLINT     NULL DEFAULT NULL,
   goles_visitante_mt SMALLINT     NULL DEFAULT NULL,
   estado             VARCHAR(20)  NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','medio_tiempo','finalizado')),
@@ -22,6 +24,10 @@ CREATE TABLE IF NOT EXISTS partidos (
   visible_usuarios   BOOLEAN      NOT NULL DEFAULT TRUE,
   updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migración para tablas existentes (ejecutar en Supabase SQL Editor):
+-- ALTER TABLE partidos ADD COLUMN IF NOT EXISTS grupo   VARCHAR(2) NULL;
+-- ALTER TABLE partidos ADD COLUMN IF NOT EXISTS jornada SMALLINT   NULL;
 
 CREATE TABLE IF NOT EXISTS predicciones (
   id                           SERIAL      PRIMARY KEY,

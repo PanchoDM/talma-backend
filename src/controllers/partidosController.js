@@ -11,6 +11,7 @@ async function getAll(req, res) {
     // PostgreSQL devuelve un objeto, extraemos { rows }
     const { rows } = await pool.query(
       `SELECT id, equipo_local, equipo_visitante, fecha_partido,
+              grupo, jornada,
               goles_local_mt, goles_visitante_mt, estado, apuestas_abiertas, visible_usuarios
        FROM partidos ${whereClause} ORDER BY fecha_partido ASC`
     );
@@ -37,21 +38,25 @@ async function getById(req, res) {
 
 // FUNCIONALIDAD ADMIN: crear nuevo partido
 async function crear(req, res) {
-  const { equipo_local, equipo_visitante, fecha_partido } = req.body;
+  const { equipo_local, equipo_visitante, fecha_partido, grupo, jornada } = req.body;
   if (!equipo_local?.trim() || !equipo_visitante?.trim() || !fecha_partido)
     return res.status(400).json({ message: 'equipo_local, equipo_visitante y fecha_partido son requeridos' });
 
   try {
     const { rows } = await pool.query(
-      'INSERT INTO partidos (equipo_local, equipo_visitante, fecha_partido) VALUES ($1, $2, $3) RETURNING id',
-      [equipo_local.trim(), equipo_visitante.trim(), fecha_partido]
+      `INSERT INTO partidos (equipo_local, equipo_visitante, fecha_partido, grupo, jornada)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [equipo_local.trim(), equipo_visitante.trim(), fecha_partido,
+       grupo?.toUpperCase() || null, jornada ? +jornada : null]
     );
     const newPartido = {
-      id: rows[0].id,
-      equipo_local: equipo_local.trim(),
+      id:              rows[0].id,
+      equipo_local:    equipo_local.trim(),
       equipo_visitante: equipo_visitante.trim(),
       fecha_partido,
-      estado: 'pendiente',
+      grupo:           grupo?.toUpperCase() || null,
+      jornada:         jornada ? +jornada : null,
+      estado:          'pendiente',
       apuestas_abiertas: true,
     };
     // Notificar a todos los usuarios conectados que hay una nueva apuesta disponible
