@@ -206,4 +206,42 @@ async function toggleVisibilidad(req, res) {
   }
 }
 
-module.exports = { getAll, getById, crear, toggleApuestas, actualizarResultado, eliminar, toggleVisibilidad };
+// FUNCIONALIDAD ADMIN: actualiza goles temporalmente sin finalizar el partido
+// ni ejecutar scoringService
+async function marcadorEnVivo(req, res) {
+  const { goles_local_mt, goles_visitante_mt } = req.body;
+  if (goles_local_mt === undefined || goles_visitante_mt === undefined)
+    return res.status(400).json({ message: 'goles_local_mt y goles_visitante_mt son requeridos' });
+
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, equipo_local, equipo_visitante, estado FROM partidos WHERE id = $1',
+      [req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ message: 'Partido no encontrado' });
+
+    const partido = rows[0];
+    if (partido.estado === 'finalizado')
+      return res.status(400).json({ message: 'El partido ya está finalizado y no puede modificarse' });
+
+    await pool.query(
+      'UPDATE partidos SET goles_local_mt = $1, goles_visitante_mt = $2 WHERE id = $3',
+      [Number(goles_local_mt), Number(goles_visitante_mt), req.params.id]
+    );
+
+    broadcast('score-updated', {
+      partido_id:         partido.id,
+      match_name:         `${partido.equipo_local} vs ${partido.equipo_visitante}`,
+      goles_local_mt:     Number(goles_local_mt),
+      goles_visitante_mt: Number(goles_visitante_mt),
+      estado:             partido.estado,
+    });
+
+    res.json({ message: 'Marcador en vivo actualizado', partido_id: +req.params.id });
+  } catch (error) {
+    console.error('[marcadorEnVivo]', error.message);
+    res.status(500).json({ message: 'Error al actualizar marcador en vivo' });
+  }
+}
+
+module.exports = { getAll, getById, crear, toggleApuestas, actualizarResultado, eliminar, toggleVisibilidad, marcadorEnVivo };
