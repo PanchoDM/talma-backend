@@ -21,8 +21,9 @@ app.use('/api/predicciones', require('./routes/predicciones'));
 app.use('/api/leaderboard',     require('./routes/leaderboard'));
 app.use('/api/notifications',   require('./routes/notifications'));
 
-// Cron job de marcadores en vivo
+// Cron jobs
 require('./cron/liveScoresCron');
+require('./cron/closeApuestasCron');
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'TalmaFM2026 v2.0' }));
 
