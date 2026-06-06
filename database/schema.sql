@@ -26,8 +26,9 @@ CREATE TABLE IF NOT EXISTS partidos (
 );
 
 -- Migración para tablas existentes (ejecutar en Supabase SQL Editor):
--- ALTER TABLE partidos ADD COLUMN IF NOT EXISTS grupo   VARCHAR(2) NULL;
--- ALTER TABLE partidos ADD COLUMN IF NOT EXISTS jornada SMALLINT   NULL;
+-- ALTER TABLE partidos ADD COLUMN IF NOT EXISTS grupo   VARCHAR(2)  NULL;
+-- ALTER TABLE partidos ADD COLUMN IF NOT EXISTS jornada SMALLINT    NULL;
+-- ALTER TABLE partidos ADD COLUMN IF NOT EXISTS ronda   VARCHAR(20) NULL; -- necesario para fases eliminatorias
 
 CREATE TABLE IF NOT EXISTS predicciones (
   id                           SERIAL      PRIMARY KEY,

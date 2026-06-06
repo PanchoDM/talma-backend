@@ -249,4 +249,24 @@ async function marcadorEnVivo(req, res) {
   }
 }
 
-module.exports = { getAll, getById, crear, toggleApuestas, actualizarResultado, eliminar, toggleVisibilidad, marcadorEnVivo };
+// FUNCIONALIDAD ADMIN: ocultar/mostrar todos los partidos de un grupo o ronda de golpe
+async function visibilidadFase(req, res) {
+  const { tipo, valor, visible } = req.body;
+  if (!['grupo', 'ronda'].includes(tipo) || !valor || typeof visible !== 'boolean')
+    return res.status(400).json({ message: 'tipo (grupo|ronda), valor y visible (boolean) son requeridos' });
+
+  const col = tipo === 'grupo' ? 'grupo' : 'ronda';
+  const valorNorm = tipo === 'grupo' ? String(valor).toUpperCase() : valor;
+  try {
+    const { rows } = await pool.query(
+      `UPDATE partidos SET visible_usuarios = $1 WHERE ${col} = $2 RETURNING id`,
+      [visible, valorNorm]
+    );
+    res.json({ updated: rows.length, tipo, valor: valorNorm, visible });
+  } catch (error) {
+    console.error('[visibilidadFase]', error.message);
+    res.status(500).json({ message: 'Error al actualizar visibilidad de fase' });
+  }
+}
+
+module.exports = { getAll, getById, crear, toggleApuestas, actualizarResultado, eliminar, toggleVisibilidad, marcadorEnVivo, visibilidadFase };
