@@ -25,11 +25,11 @@ app.use('/api/notifications',   require('./routes/notifications'));
 require('./cron/liveScoresCron');
 require('./cron/closeApuestasCron');
 
-app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'TalmaFM2026 v2.0' }));
+app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'PollaMundial2026 v2.0' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 TalmaFM2026 Backend corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 PollaMundial2026 Backend corriendo en http://localhost:${PORT}`);
 
   // Keep-alive: evita que Render (free tier) hiberne el servidor por inactividad.
   // Requiere la variable de entorno APP_URL con la URL pública del servicio en Render.

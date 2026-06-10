@@ -7,7 +7,7 @@ async function register(req, res) {
   if (!nombre_usuario || !password)
     return res.status(400).json({ message: 'nombre_usuario y password son requeridos' });
 
-  if (!nombre_usuario.trim().toLowerCase().endsWith('@talma.com'))
+  if (!nombre_usuario.trim().toLowerCase().endsWith('@pollamundial2026.com'))
     return res.status(403).json({ message: 'ingrese la credencial correcta' });
 
   try {
@@ -31,7 +31,7 @@ async function login(req, res) {
   if (!nombre_usuario || !password)
     return res.status(400).json({ message: 'Credenciales requeridas' });
 
-  if (!nombre_usuario.trim().toLowerCase().endsWith('@talma.com'))
+  if (!nombre_usuario.trim().toLowerCase().endsWith('@pollamundial2026.com'))
     return res.status(403).json({ message: 'ingrese la credencial correcta' });
 
   try {

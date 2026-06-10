@@ -35,12 +35,12 @@ async function setup() {
     'SELECT id FROM usuarios WHERE nombre_usuario = $1', ['admin']
   );
   if (rows.length === 0) {
-    const hash = await bcrypt.hash('Talma2026!', 12);
+    const hash = await bcrypt.hash('PollaMundial2026!', 12);
     await pool.query(
       'INSERT INTO usuarios (id, nombre_usuario, password_hash, rol) VALUES ($1, $2, $3, $4)',
       [uuidv4(), 'admin', hash, 'admin']
     );
-    console.log('Admin creado  ->  usuario: admin  |  password: Talma2026!');
+    console.log('Admin creado  ->  usuario: admin  |  password: PollaMundial2026!');
   } else {
     console.log('Admin ya existe, omitido');
   }

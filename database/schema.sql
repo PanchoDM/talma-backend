@@ -1,4 +1,4 @@
--- TalmaFM2026 - Esquema PostgreSQL v2.0 (Supabase)
+-- PollaMundial2026 - Esquema PostgreSQL v2.0 (Supabase)
 
 CREATE TABLE IF NOT EXISTS usuarios (
   id               VARCHAR(36)  NOT NULL PRIMARY KEY,
