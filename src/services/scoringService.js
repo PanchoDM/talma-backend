@@ -3,7 +3,7 @@ const pool = require('../config/database');
 /**
  * Calcula y reparte puntos para todas las predicciones de un partido finalizado.
  * Reglas:
- *   - Marcador exacto al medio tiempo → 10 puntos
+ *   - Marcador exacto al medio tiempo → 7 puntos
  *   - Tendencia correcta (local/empate/visitante) → 3 puntos
  *   - Sin acierto → 0 puntos
  */
@@ -30,7 +30,7 @@ async function calcularYRepartirPuntos(partidoId) {
     const esExacto = pred.goles_local_esperados_mt === gl && pred.goles_visitante_esperados_mt === gv;
     const esTendencia = pred.tendencia_apostada === tendenciaReal;
 
-    if (esExacto)      puntos = 10;
+    if (esExacto)      puntos = 7;
     else if (esTendencia) puntos = 3;
 
     await pool.query(
